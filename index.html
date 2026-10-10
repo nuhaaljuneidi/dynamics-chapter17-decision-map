@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 17 — Planar Kinematics of Rigid Bodies — Tree</title>
+<style>
+  :root{
+    --navy:#002855; --gold:#c99400; --goldbg:#fff6de;
+    --blue:#0f5fae; --bluebg:#eaf2fb;
+    --orange:#b5501c; --orangebg:#fdf1e6;
+    --purple:#5b3a91; --purplebg:#f2ecfa;
+    --ink:#14213a; --gray:#5f7084; --line:#8a96a8; --page:#f3f5f8; --topgold:#ffcc00;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--page);color:var(--ink);font-family:Arial,Helvetica,system-ui,sans-serif}
+  header{background:var(--navy);color:#fff;padding:18px clamp(14px,3vw,36px);border-top:6px solid var(--topgold)}
+  header h1{margin:0;font-size:clamp(18px,2.6vw,26px);font-weight:700}
+  header p{margin:5px 0 0;color:#cfe0ef;font-size:13.5px}
+  header .book{float:right;font-size:11.5px;font-style:italic;color:#a9cbd0}
+
+  .legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;background:#fff;border-bottom:1px solid #dfe4ea;
+          padding:8px 14px;font-size:12px;color:var(--gray);position:sticky;top:0;z-index:50}
+  .legend .sw{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+  .legend .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  .export-tools{max-width:980px;margin:18px auto 0;padding:14px 16px;background:#fff;border:1px solid #c8d0da;
+                border-radius:10px;box-shadow:0 2px 6px rgba(0,20,50,.08)}
+  .export-tools .export-title{font-weight:700;color:var(--navy);font-size:14px;margin-bottom:10px}
+  .export-fields{display:grid;grid-template-columns:minmax(190px,1fr) minmax(150px,.7fr) auto;gap:10px;align-items:end}
+  .export-fields label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:700;color:var(--gray)}
+  .export-fields input{min-height:42px;border:1px solid #aeb9c7;border-radius:7px;padding:9px 10px;font:inherit;color:var(--ink)}
+  .export-fields input:focus{outline:3px solid rgba(15,95,174,.22);border-color:var(--blue)}
+  .export-fields button{min-height:42px;border:0;border-radius:7px;padding:9px 14px;font:700 13px Arial,Helvetica,sans-serif;
+                        cursor:pointer;color:#fff;background:var(--navy)}
+  .export-fields button.secondary{background:var(--blue)}
+  .export-fields button:hover{filter:brightness(1.08)}
+  .export-fields button:focus-visible{outline:3px solid rgba(15,95,174,.3);outline-offset:2px}
+  .export-error{min-height:18px;margin-top:7px;color:#a32626;font-size:11px;font-weight:700}
+  .export-meta{display:none;max-width:900px;margin:14px auto 0;padding:8px 16px;text-align:center;font-size:12px;
+               font-weight:700;color:var(--navy);border:1px solid #c6d2df;border-radius:7px;background:#fff}
+  .export-meta:empty{display:none !important}
+  body.exporting .export-tools{display:none}
+  body.exporting .export-meta{display:block}
+  body.exporting #stage details{display:none !important}
+  body.exporting .legend, body.exporting footer.guidance{display:none !important}
+
+  #stage{position:relative;max-width:1900px;margin:0 auto;padding:0 16px 10px}
+  svg#connectors{position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}
+  svg#connectors path{fill:none;stroke:var(--line);stroke-width:2}
+
+  /* every tree depth is its own independent, full-width row: a wide subtree below
+     never widens or shifts the levels above it */
+  .level{position:relative;z-index:1;display:flex;flex-direction:row;justify-content:center;
+         align-items:flex-start;gap:20px;flex-wrap:wrap;width:100%;margin-top:34px}
+  .level:first-of-type{margin-top:26px}
+
+  .coord-children{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;width:100%;
+                  max-width:1100px;margin:34px auto 0;position:relative;z-index:1}
+  .coord-children .node{width:100%;min-width:0}
+
+  .node{
+    position:relative;z-index:1;background:#fff;border-radius:10px;border:2px solid var(--navy);
+    padding:11px 14px;box-shadow:0 2px 6px rgba(0,20,50,.08);
+  }
+  .node, .node *{overflow-wrap:anywhere}
+  .node.root{width:360px;text-align:center}
+  .node.l1{width:320px}
+  .node.parent2{width:320px;text-align:center}
+  .node.leafwide{width:320px}
+
+  .node .t{font-weight:700;font-size:13px;color:var(--navy);margin:0 0 2px}
+  .node .sub{font-size:10.5px;color:var(--gray);font-style:italic;margin:0 0 6px}
+  .node .method{font-size:10.5px;font-weight:700;color:var(--ink);margin:4px 0 2px}
+  .node .f{font-size:12px;margin:3px 0;line-height:1.45}
+  .node .note{font-size:10px;color:var(--gray);margin-top:5px;line-height:1.4}
+  .node hr{border:none;border-top:1px dashed #d7dce3;margin:7px 0}
+  .vec{font-weight:700}
+  sub, sup{font-size:75%}
+
+  .node details{margin-top:5px}
+  .node summary{cursor:pointer;font-size:10.5px;font-weight:700;color:var(--blue);list-style:none;user-select:none}
+  .node summary::-webkit-details-marker{display:none}
+  .node summary::before{content:"▸ ";display:inline-block;transition:transform .1s}
+  .node details[open] summary::before{content:"▾ "}
+  .node details > *:not(summary){margin-top:4px}
+
+  .node.system{border-color:var(--purple);background:var(--purplebg)}
+  .node.system .t{color:var(--purple)}
+  .node.cartesian{border-color:var(--blue);background:var(--bluebg)}
+  .node.cartesian .t{color:var(--blue)}
+  .node.normtan{border-color:var(--orange);background:var(--orangebg)}
+  .node.normtan .t{color:var(--orange)}
+  .node.polar{border-color:var(--gold);background:var(--goldbg)}
+  .node.polar .t{color:#8a6d00}
+
+  footer.guidance{
+    max-width:900px;margin:36px auto 50px;padding:14px 20px;background:#fff;
+    border:2px solid var(--navy);border-radius:10px;font-size:12.5px;line-height:1.55;
+  }
+  footer.guidance .t{font-weight:700;color:var(--navy);font-size:13.5px;margin-bottom:6px}
+
+  @media (max-width:1000px) and (min-width:761px){
+    .coord-children{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+
+  /* ---------------- mobile: depth-indented rail tree ---------------- */
+  @media (max-width:760px){
+    .export-tools{margin:12px}
+    .export-fields{grid-template-columns:1fr}
+    .level, .coord-children{
+      display:flex;flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:0;width:auto;margin-top:0;
+    }
+    #stage{padding:0 12px}
+    svg#connectors{display:none}
+    .node{width:auto !important;margin:10px 0;position:relative}
+    .level[data-depth="1"], .level[data-depth="2"], .coord-children{
+      border-left:3px solid var(--line);
+    }
+    .level[data-depth="1"]{margin-left:16px;padding-left:14px}
+    .level[data-depth="2"]{margin-left:32px;padding-left:14px}
+    .coord-children{margin-left:48px;padding-left:14px}
+
+    .node[data-depth]{position:relative}
+    .node[data-depth]:not([data-depth="0"])::before{
+      content:"";position:absolute;left:-14px;top:22px;width:14px;height:2px;background:var(--line);
+    }
+  }
+
+  @media print{
+    .legend{position:static}
+    .export-tools{display:none !important}
+    .export-meta{display:block}
+    .node details{display:block}
+    .node details summary{display:none}
+    .node details > *{display:block !important}
+  }
+
+  .node.w300{width:300px}
+  .node.c-blue{border-color:var(--blue);background:var(--bluebg)} .node.c-blue .t{color:var(--blue)}
+  .node.c-orange{border-color:var(--orange);background:var(--orangebg)} .node.c-orange .t{color:var(--orange)}
+  .node.c-gold{border-color:var(--gold);background:var(--goldbg)} .node.c-gold .t{color:#8a6d00}
+  .node.c-purple{border-color:var(--purple);background:var(--purplebg)} .node.c-purple .t{color:var(--purple)}
+  .node .warn{display:inline-block;margin-top:5px;padding:2px 7px;border:1px solid #e0a35a;border-radius:5px;
+              background:#fff4e5;color:#8a4b00;font-size:10px;font-weight:700}
+  @media (max-width:760px){
+    .level[data-depth="3"]{margin-left:48px;padding-left:14px;border-left:3px solid var(--line)}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="book">Bedford &amp; Fowler — Chapter 17, Planar Kinematics of Rigid Bodies</span>
+  <h1>Chapter 17 — Planar Kinematics of Rigid Bodies: Decision Map</h1>
+  <p>How does the rigid body move — and what do you need to find?</p>
+</header>
+
+<div class="legend">
+  <span class="sw"><i class="dot" style="background:var(--navy)"></i>General selection</span>
+  <span class="sw"><i class="dot" style="background:var(--blue)"></i>Translation</span>
+  <span class="sw"><i class="dot" style="background:var(--orange)"></i>Fixed-axis rotation</span>
+  <span class="sw"><i class="dot" style="background:var(--gold)"></i>General plane motion</span>
+  <span class="sw"><i class="dot" style="background:var(--purple)"></i>Sliding contacts &amp; moving frames</span>
+</div>
+
+<section class="export-tools" aria-labelledby="export-title">
+  <div class="export-title" id="export-title">Download a personalized copy</div>
+  <div class="export-fields">
+    <label>Student name
+      <input id="student-name" type="text" autocomplete="name" placeholder="Enter your full name" required>
+    </label>
+    <label>Course section
+      <input id="course-section" type="text" placeholder="Example: Section 01" required>
+    </label>
+    <button type="button" class="secondary" id="download-png">Download as image</button>
+  </div>
+  <div class="export-error" id="export-error" role="alert" aria-live="polite"></div>
+</section>
+
+<div class="export-meta" id="export-meta" aria-live="polite"></div>
+
+<div id="stage">
+<svg id="connectors"></svg>
+  <div class="level" data-depth="0">
+    <div class="node root" data-depth="0" id="n-root">
+      <div class="t">Rigid Body in Planar Motion — §17.1</div>
+      <div class="sub">Does the body rotate? About a fixed axis, or while it also translates?</div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">A rigid body keeps the distance between any two of its points constant. Planar motion: every point moves parallel to one fixed plane.</div>
+      </details>
+    </div>
+  </div>
+  <div class="level" data-depth="1">
+    <div class="node l1 c-blue" data-depth="1" data-parent="n-root" id="n-trans">
+      <div class="t">Translation — §17.1</div>
+      <div class="f">ω = 0,&nbsp; α = 0</div>
+      <div class="f"><span class="vec">v</span><sub>A</sub> = <span class="vec">v</span><sub>B</sub>,&nbsp; <span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub></div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Every point has the same velocity and acceleration: treat the body as a particle (Chapter 13).</div>
+        <div class="note">Curvilinear translation: points move on curved paths, but the body does not rotate (a Ferris-wheel gondola).</div>
+      </details>
+    </div>
+
+    <div class="node l1 parent2" data-depth="1" data-parent="n-root" id="n-gpm">
+      <div class="t">General Plane Motion</div>
+      <div class="sub">Translation + rotation at the same time. What do you need?</div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Example: the connecting rod of an engine, a rolling wheel, a sliding ladder.</div>
+      </details>
+    </div>
+
+    <div class="node l1 c-orange" data-depth="1" data-parent="n-root" id="n-fixed">
+      <div class="t">Rotation About a Fixed Axis — §17.2</div>
+      <div class="f">ω = dθ/dt,&nbsp; α = dω/dt,&nbsp; α dθ = ω dω</div>
+      <div class="f">v = rω,&nbsp; a<sub>t</sub> = rα,&nbsp; a<sub>n</sub> = rω²</div>
+      <div class="f"><span class="vec">v</span> = <span class="vec">ω</span> × <span class="vec">r</span>,&nbsp; <span class="vec">a</span> = <span class="vec">α</span> × <span class="vec">r</span> − ω²<span class="vec">r</span></div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Points on the axis do not move; every other point moves on a circle about the axis.</div>
+        <div class="note">Constant α only: ω = ω₀ + αt,&nbsp; θ = θ₀ + ω₀t + ½αt²,&nbsp; ω² = ω₀² + 2α(θ − θ₀).</div>
+        <hr>
+        <div class="method">Meshing gears:</div>
+        <div class="f">r<sub>A</sub>ω<sub>A</sub> = r<sub>B</sub>ω<sub>B</sub>,&nbsp; r<sub>A</sub>α<sub>A</sub> = r<sub>B</sub>α<sub>B</sub></div>
+        <div class="note">Same speed and tangential acceleration at the contact point; the normal accelerations differ.</div>
+      </details>
+    </div>
+  </div>
+  <div class="level" data-depth="2">
+    <div class="node w300 parent2" data-depth="2" data-parent="n-gpm" id="n-vel">
+      <div class="t">Velocities</div>
+      <div class="sub">Two points on the same rigid body</div>
+    </div>
+
+    <div class="node w300 c-gold" data-depth="2" data-parent="n-gpm" id="n-acc">
+      <div class="t">Accelerations — §17.5</div>
+      <div class="f"><span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub> + <span class="vec">α</span> × <span class="vec">r</span><sub>A/B</sub> − ω²<span class="vec">r</span><sub>A/B</sub></div>
+      <div class="warn">Find every ω first (velocity analysis).</div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Tangential part α × r is ⊥ to r<sub>A/B</sub>; the normal part −ω²r points from A toward B.</div>
+        <div class="note">Rolling without slipping: a<sub>G</sub> = Rα; the contact point has a<sub>C</sub> = Rω² (toward the center), not zero.</div>
+        <div class="note">Linkages: write a<sub>B</sub> from each bar and match i and j components.</div>
+      </details>
+    </div>
+
+    <div class="node w300 parent2" data-depth="2" data-parent="n-gpm" id="n-slide">
+      <div class="t">Point Moving Relative to the Body</div>
+      <div class="sub">A pin in a slot, a collar on a rotating bar, or a rotating observer</div>
+    </div>
+  </div>
+  <div class="level" data-depth="3">
+    <div class="node w300 c-gold" data-depth="3" data-parent="n-vel" id="n-relv">
+      <div class="t">Relative Velocity — §17.3</div>
+      <div class="f"><span class="vec">v</span><sub>A</sub> = <span class="vec">v</span><sub>B</sub> + <span class="vec">ω</span> × <span class="vec">r</span><sub>A/B</sub></div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">A moves on a circle about B, so v<sub>A/B</sub> = r<sub>A/B</sub>ω, ⊥ to r<sub>A/B</sub>.</div>
+        <div class="note">Write ω = ωk (counterclockwise +). A negative answer means clockwise.</div>
+        <div class="note">Sliders and walls fix the direction of a velocity: use that component equation first.</div>
+      </details>
+    </div>
+
+    <div class="node w300 c-gold" data-depth="3" data-parent="n-vel" id="n-ic">
+      <div class="t">Instantaneous Center — §17.4</div>
+      <div class="f">v<sub>P</sub> = ω r<sub>P/IC</sub>,&nbsp; ⊥ to r<sub>P/IC</sub></div>
+      <div class="warn">Velocities only — never accelerations.</div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Locate the IC where the perpendiculars to two known velocity directions meet.</div>
+        <div class="note">Rolling without slipping: the contact point is the IC; v<sub>G</sub> = Rω, top point 2Rω.</div>
+        <div class="note">v<sub>A</sub> = v<sub>B</sub> (same direction and size): pure translation, no IC.</div>
+      </details>
+    </div>
+
+    <div class="node w300 c-purple" data-depth="3" data-parent="n-slide" id="n-sc">
+      <div class="t">Sliding Contacts — §17.6</div>
+      <div class="f"><span class="vec">v</span><sub>A</sub> = <span class="vec">v</span><sub>B</sub> + <span class="vec">v</span><sub>rel</sub> + <span class="vec">ω</span> × <span class="vec">r</span><sub>A/B</sub></div>
+      <div class="f"><span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub> + <span class="vec">a</span><sub>rel</sub> + 2<span class="vec">ω</span> × <span class="vec">v</span><sub>rel</sub> + <span class="vec">α</span> × <span class="vec">r</span> − ω²<span class="vec">r</span></div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Attach a body-fixed frame (origin B) to the body that A slides on.</div>
+        <div class="note">v<sub>rel</sub>, a<sub>rel</sub>: motion of A seen by an observer riding on that body (along the slot or bar).</div>
+        <div class="note">2ω × v<sub>rel</sub> is the Coriolis acceleration: sliding and rotating together.</div>
+      </details>
+    </div>
+
+    <div class="node w300 c-purple" data-depth="3" data-parent="n-slide" id="n-mf">
+      <div class="t">Moving Reference Frames — §17.7</div>
+      <div class="f"><span class="vec">v</span><sub>B</sub> = <span class="vec">v</span><sub>A</sub> + <span class="vec">ω</span> × <span class="vec">r</span><sub>B/A</sub> + (<span class="vec">v</span><sub>B/A</sub>)<sub>xy</sub></div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">The observer at A uses axes that rotate with ω and α (a pilot in a turning plane, a turntable).</div>
+        <div class="note">For an observer moving on a circle: ω = v<sub>A</sub>/ρ, α = (a<sub>t</sub>)<sub>A</sub>/ρ.</div>
+        <div class="note">(v<sub>B/A</sub>)<sub>xy</sub> ≠ v<sub>B</sub> − v<sub>A</sub>: the rotating observer sees something different from a translating one.</div>
+      </details>
+    </div>
+  </div>
+
+</div>
+
+<footer class="guidance">
+  <div class="t">Classify the motion first, then choose the tool — and always find velocities before accelerations.</div>
+  <div>• Two points on the same rigid body: relative velocity/acceleration with ω and α of that body.</div>
+  <div>• Quick velocities: the instantaneous center — but never use the IC for accelerations.</div>
+  <div>• A point sliding on a moving body, or an observer that rotates: add the relative terms and the Coriolis term 2ω × v<sub>rel</sub>.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+(function(){
+  var svg = document.getElementById('connectors');
+  var stage = document.getElementById('stage');
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function isMobile(){ return window.matchMedia('(max-width:760px)').matches; }
+
+  function line(x1,y1,x2,y2){
+    var p = document.createElementNS(NS,'path');
+    p.setAttribute('d', 'M'+x1+','+y1+' L'+x2+','+y2);
+    svg.appendChild(p);
+  }
+  function centerX(rect, stageRect){ return rect.left + rect.width/2 - stageRect.left; }
+
+  function draw(){
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    if (isMobile()) return;
+
+    var stageRect = stage.getBoundingClientRect();
+    svg.setAttribute('width', stageRect.width);
+    svg.setAttribute('height', stage.scrollHeight);
+    svg.setAttribute('viewBox', '0 0 ' + stageRect.width + ' ' + stage.scrollHeight);
+
+    var byParent = {};
+    stage.querySelectorAll('.node[data-parent]').forEach(function(el){
+      el.dataset.parent.split(/\s+/).forEach(function(pid){
+        (byParent[pid] = byParent[pid] || []).push(el);
+      });
+    });
+
+    Object.keys(byParent).forEach(function(pid){
+      var parent = document.getElementById(pid);
+      if (!parent) return;
+      var pRect = parent.getBoundingClientRect();
+      var px = centerX(pRect, stageRect);
+      var curY = pRect.bottom - stageRect.top;
+
+      var kids = byParent[pid].slice();
+      kids.sort(function(a,b){
+        var ar=a.getBoundingClientRect(), br=b.getBoundingClientRect();
+        return Math.abs(ar.top-br.top)>4 ? ar.top-br.top : ar.left-br.left;
+      });
+      var visualRows=[];
+      kids.forEach(function(el){
+        var top=el.getBoundingClientRect().top;
+        var row=visualRows.find(function(r){return Math.abs(r.top-top)<6;});
+        if(row){row.els.push(el);}else{visualRows.push({top:top,els:[el]});}
+      });
+
+      visualRows.forEach(function(row){
+        var els = row.els;
+        var rects = els.map(function(el){ return el.getBoundingClientRect(); });
+        var tops = rects.map(function(r){ return r.top - stageRect.top; });
+        var railY = Math.min.apply(null, tops) - 14;
+
+        line(px, curY, px, railY);
+
+        var xs = rects.map(function(r){ return centerX(r, stageRect); });
+        line(Math.min.apply(null, xs.concat([px])), railY, Math.max.apply(null, xs.concat([px])), railY);
+        els.forEach(function(el, i){
+          var cx = xs[i], cy = tops[i];
+          line(cx, railY, cx, cy);
+        });
+
+        curY = railY;
+      });
+    });
+  }
+
+  var nameInput=document.getElementById('student-name');
+  var sectionInput=document.getElementById('course-section');
+  var exportError=document.getElementById('export-error');
+  var exportMeta=document.getElementById('export-meta');
+
+  function exportIdentity(){
+    var name=nameInput.value.trim();
+    var section=sectionInput.value.trim();
+    exportError.textContent='';
+    nameInput.removeAttribute('aria-invalid');
+    sectionInput.removeAttribute('aria-invalid');
+    if(!name || !section){
+      exportError.textContent='Enter both your name and course section before downloading.';
+      if(!name){nameInput.setAttribute('aria-invalid','true');nameInput.focus();}
+      else{sectionInput.setAttribute('aria-invalid','true');sectionInput.focus();}
+      return null;
+    }
+    exportMeta.textContent='Prepared for: '+name+'  |  Course section: '+section;
+    return {name:name,section:section};
+  }
+
+  function safeFilePart(value){
+    return value.replace(/[^a-z0-9_-]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,50) || 'student';
+  }
+
+  function nextPaint(){
+    return new Promise(function(resolve){requestAnimationFrame(function(){requestAnimationFrame(resolve);});});
+  }
+
+  var LOGGER_URL='https://script.google.com/macros/s/AKfycbwmh8vX2n26GHHKq9yIGjy3fanmZ_XQddXHSH3RmrtV3HdhrpO27E3zZvXswCfN9QRpXg/exec';
+  async function logDownload(who){
+    var body=new URLSearchParams({action:'download',studentName:who.name,email:'',activity:'Chapter 17 — Planar Kinematics of Rigid Bodies: Decision Map',scenario:'Course section: '+who.section,displacement:'',distance:'',notes:'Downloaded decision-map image'});
+    var response=await fetch(LOGGER_URL,{method:'POST',mode:'cors',credentials:'omit',redirect:'follow',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:body});
+    if(!response.ok)throw new Error('Registration service returned HTTP '+response.status);
+    return true;
+  }
+  async function downloadPng(){
+    var who=exportIdentity();if(!who)return;var button=document.getElementById('download-png');var states=Array.from(document.querySelectorAll('details')).map(function(d){return d.open;});button.disabled=true;button.textContent='Recording registration…';
+    try{await logDownload(who);}
+    catch(logError){exportError.textContent='Your registration could not be recorded, so the download was not started. Please check your connection and try again.';button.disabled=false;button.textContent='Download as image';return;}
+    button.textContent='Creating image…';document.querySelectorAll('details').forEach(function(d){d.open=false;});document.body.classList.add('exporting');await nextPaint();draw();await nextPaint();
+    try{if(typeof html2canvas!=='function')throw new Error('Image library did not load');var exportWidth=Math.ceil(Math.max(document.documentElement.scrollWidth,document.body.scrollWidth));var exportHeight=Math.ceil(Math.max(document.documentElement.scrollHeight,document.body.scrollHeight));var canvas=await html2canvas(document.body,{backgroundColor:'#f3f5f8',scale:Math.min(2,12000/Math.max(exportWidth,exportHeight)),logging:false,useCORS:true,width:exportWidth,height:exportHeight,windowWidth:exportWidth,windowHeight:exportHeight,scrollX:0,scrollY:0});var blob=await new Promise(function(resolve){canvas.toBlob(resolve,'image/png');});if(!blob)throw new Error('PNG creation failed');var downloadUrl=URL.createObjectURL(blob),link=document.createElement('a');link.href=downloadUrl;link.download='Chapter-17-Decision-Map_'+safeFilePart(who.name)+'_'+safeFilePart(who.section)+'.png';document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(downloadUrl);},1000);exportError.textContent='Download started. Your name and course section were recorded.';}
+    catch(err){exportError.textContent='The image could not be created. Check your connection, then try again.';}
+    finally{document.querySelectorAll('details').forEach(function(d,i){d.open=!!states[i];});document.body.classList.remove('exporting');button.disabled=false;button.textContent='Download as image';draw();}
+  }
+
+  document.getElementById('download-png').addEventListener('click',downloadPng);
+  var printStates=[];
+  window.addEventListener('beforeprint', function(){
+    printStates=Array.from(document.querySelectorAll('details')).map(function(d){return d.open;});
+    document.querySelectorAll('details').forEach(function(d){d.open=true;});
+    draw();
+  });
+  window.addEventListener('afterprint', function(){
+    document.querySelectorAll('details').forEach(function(d,i){d.open=!!printStates[i];});
+    draw();
+  });
+
+  window.addEventListener('load', draw);
+  window.addEventListener('resize', function(){ requestAnimationFrame(draw); });
+  document.addEventListener('toggle', function(){ requestAnimationFrame(draw); }, true);
+  if (document.fonts && document.fonts.ready){ document.fonts.ready.then(draw); }
+  document.addEventListener('DOMContentLoaded', draw);
+  setTimeout(draw, 50);
+  setTimeout(draw, 300);
+})();
+</script>
+
+</body>
+</html>
