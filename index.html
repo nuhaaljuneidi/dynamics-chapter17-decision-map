@@ -146,6 +146,20 @@
   @media (max-width:760px){
     .level[data-depth="3"]{margin-left:48px;padding-left:14px;border-left:3px solid var(--line)}
   }
+  .node.w250{width:250px}
+  .node.l1.c-purple{width:400px}
+  .node.c-goldline{border-color:var(--gold)} .node.c-goldline .t{color:#8a6d00}
+  /* phone: list each branch in order (YES branch, then NO branch) */
+  @media (max-width:760px){
+    #stage{display:flex;flex-direction:column}
+    #stage .level{display:contents}
+    #stage .node{border-left-width:6px}
+    #stage .node[data-depth="1"]{margin-left:12px} #stage .node[data-depth="2"]{margin-left:24px}
+    #stage .node[data-depth="3"]{margin-left:36px} #stage .node[data-depth="4"]{margin-left:48px}
+    #stage .node[data-depth]::before{display:none}
+    #n-root{order:0} #n-yes{order:1} #n-trans{order:2} #n-fixed{order:3} #n-gpm{order:4}
+    #n-relv{order:5} #n-ic{order:6} #n-acc{order:7} #n-no{order:8} #n-sc{order:9} #n-mf{order:10}
+  }
 </style>
 </head>
 <body>
@@ -153,15 +167,15 @@
 <header>
   <span class="book">Bedford &amp; Fowler — Chapter 17, Planar Kinematics of Rigid Bodies</span>
   <h1>Chapter 17 — Planar Kinematics of Rigid Bodies: Decision Map</h1>
-  <p>How does the rigid body move — and what do you need to find?</p>
+  <p>Start with the point: is it fixed to the body? Then: how does the body move — and what do you need to find?</p>
 </header>
 
 <div class="legend">
-  <span class="sw"><i class="dot" style="background:var(--navy)"></i>General selection</span>
+  <span class="sw"><i class="dot" style="background:var(--navy)"></i>Decision questions</span>
   <span class="sw"><i class="dot" style="background:var(--blue)"></i>Translation</span>
   <span class="sw"><i class="dot" style="background:var(--orange)"></i>Fixed-axis rotation</span>
-  <span class="sw"><i class="dot" style="background:var(--gold)"></i>General plane motion</span>
-  <span class="sw"><i class="dot" style="background:var(--purple)"></i>Sliding contacts &amp; moving frames</span>
+  <span class="sw"><i class="dot" style="background:var(--gold)"></i>General planar motion</span>
+  <span class="sw"><i class="dot" style="background:var(--purple)"></i>Point moving relative to the body</span>
 </div>
 
 <section class="export-tools" aria-labelledby="export-title">
@@ -185,42 +199,62 @@
   <div class="level" data-depth="0">
     <div class="node root" data-depth="0" id="n-root">
       <div class="t">Rigid Body in Planar Motion — §17.1</div>
-      <div class="sub">Does the body rotate? About a fixed axis, or while it also translates?</div>
+      <div class="sub">Is the point fixed to the rigid body you are analyzing?</div>
       <details>
         <summary>Details</summary>
-        <div class="note">A rigid body keeps the distance between any two of its points constant. Planar motion: every point moves parallel to one fixed plane.</div>
+        <div class="note">A rigid body keeps the distance between any two of its points constant. Planar motion: every point moves parallel to one fixed plane, and ω = ω<span class="vec">k</span> is perpendicular to that plane.</div>
+        <div class="note">Name the body first. A piston moves relative to the ground, but its pin is fixed to the connecting rod.</div>
       </details>
     </div>
   </div>
+
   <div class="level" data-depth="1">
-    <div class="node l1 c-blue" data-depth="1" data-parent="n-root" id="n-trans">
+    <div class="node l1 parent2" data-depth="1" data-parent="n-root" id="n-yes">
+      <div class="t">YES — the point is fixed to the body</div>
+      <div class="sub">How does the body move?</div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Clues: attached, pinned, welded, a point “of the body”, the center of a rolling wheel.</div>
+      </details>
+    </div>
+
+    <div class="node l1 c-purple" data-depth="1" data-parent="n-root" id="n-no">
+      <div class="t">NO — the point moves relative to the body</div>
+      <div class="sub">It slides along the body, or it is seen from a moving frame. Frame xyz fixed to the body, origin B:</div>
+      <div class="f"><span class="vec">v</span><sub>A</sub> = <span class="vec">v</span><sub>B</sub> + <span class="vec">v</span><sub>A rel</sub> + <span class="vec">ω</span> × <span class="vec">r</span><sub>A/B</sub></div>
+      <div class="f"><span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub> + <span class="vec">a</span><sub>A rel</sub> + 2<span class="vec">ω</span> × <span class="vec">v</span><sub>A rel</sub> + <span class="vec">α</span> × <span class="vec">r</span><sub>A/B</sub> − ω²<span class="vec">r</span><sub>A/B</sub></div>
+      <div class="warn">Need ω, α of that body? Get them from the YES side first.</div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">v<sub>A rel</sub>, a<sub>A rel</sub>: the motion of A seen by an observer riding on the body (along the slot or bar).</div>
+        <div class="note">2ω × v<sub>A rel</sub> is the Coriolis acceleration: it appears when A slides on a body that rotates.</div>
+        <div class="note">If A does not move on the body, v<sub>A rel</sub> = a<sub>A rel</sub> = 0 and these become the YES-side equations.</div>
+      </details>
+    </div>
+  </div>
+
+  <div class="level" data-depth="2">
+    <div class="node w250 c-blue" data-depth="2" data-parent="n-yes" id="n-trans">
       <div class="t">Translation — §17.1</div>
+      <div class="sub">The body moves without rotating.</div>
       <div class="f">ω = 0,&nbsp; α = 0</div>
       <div class="f"><span class="vec">v</span><sub>A</sub> = <span class="vec">v</span><sub>B</sub>,&nbsp; <span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub></div>
       <details>
         <summary>Details</summary>
-        <div class="note">Every point has the same velocity and acceleration: treat the body as a particle (Chapter 13).</div>
-        <div class="note">Curvilinear translation: points move on curved paths, but the body does not rotate (a Ferris-wheel gondola).</div>
+        <div class="note">Every point has the same velocity and acceleration: describe one point (Chapter 13).</div>
+        <div class="note">The points may move on curved paths while the body stays level (a swing’s seat bar).</div>
       </details>
     </div>
 
-    <div class="node l1 parent2" data-depth="1" data-parent="n-root" id="n-gpm">
-      <div class="t">General Plane Motion</div>
-      <div class="sub">Translation + rotation at the same time. What do you need?</div>
-      <details>
-        <summary>Details</summary>
-        <div class="note">Example: the connecting rod of an engine, a rolling wheel, a sliding ladder.</div>
-      </details>
-    </div>
-
-    <div class="node l1 c-orange" data-depth="1" data-parent="n-root" id="n-fixed">
+    <div class="node w250 c-orange" data-depth="2" data-parent="n-yes" id="n-fixed">
       <div class="t">Rotation About a Fixed Axis — §17.2</div>
-      <div class="f">ω = dθ/dt,&nbsp; α = dω/dt,&nbsp; α dθ = ω dω</div>
+      <div class="sub">The body turns about an axis fixed in the ground.</div>
+      <div class="f">ω = dθ/dt,&nbsp; α = dω/dt</div>
       <div class="f">v = rω,&nbsp; a<sub>t</sub> = rα,&nbsp; a<sub>n</sub> = rω²</div>
       <div class="f"><span class="vec">v</span> = <span class="vec">ω</span> × <span class="vec">r</span>,&nbsp; <span class="vec">a</span> = <span class="vec">α</span> × <span class="vec">r</span> − ω²<span class="vec">r</span></div>
       <details>
         <summary>Details</summary>
-        <div class="note">Points on the axis do not move; every other point moves on a circle about the axis.</div>
+        <div class="note">This is §17.3/§17.5 with B on the axis (<span class="vec">v</span><sub>B</sub> = <span class="vec">a</span><sub>B</sub> = 0).</div>
         <div class="note">Constant α only: ω = ω₀ + αt,&nbsp; θ = θ₀ + ω₀t + ½αt²,&nbsp; ω² = ω₀² + 2α(θ − θ₀).</div>
         <hr>
         <div class="method">Meshing gears:</div>
@@ -228,74 +262,74 @@
         <div class="note">Same speed and tangential acceleration at the contact point; the normal accelerations differ.</div>
       </details>
     </div>
-  </div>
-  <div class="level" data-depth="2">
-    <div class="node w300 parent2" data-depth="2" data-parent="n-gpm" id="n-vel">
-      <div class="t">Velocities</div>
-      <div class="sub">Two points on the same rigid body</div>
+
+    <div class="node w250 parent2 c-goldline" data-depth="2" data-parent="n-yes" id="n-gpm">
+      <div class="t">General Planar Motion</div>
+      <div class="sub">The body translates and rotates (connecting rod, rolling wheel, sliding ladder).</div>
+      <div class="sub">Velocities first — then accelerations.</div>
     </div>
 
-    <div class="node w300 c-gold" data-depth="2" data-parent="n-gpm" id="n-acc">
-      <div class="t">Accelerations — §17.5</div>
-      <div class="f"><span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub> + <span class="vec">α</span> × <span class="vec">r</span><sub>A/B</sub> − ω²<span class="vec">r</span><sub>A/B</sub></div>
-      <div class="warn">Find every ω first (velocity analysis).</div>
+    <div class="node w250 c-purple" data-depth="2" data-parent="n-no" id="n-sc">
+      <div class="t">Sliding Contacts — §17.6</div>
+      <div class="sub">A slides along a moving or rotating body.</div>
+      <div class="note">Pin in a slot, collar on a rotating bar. Attach xyz to the body A slides on.</div>
       <details>
         <summary>Details</summary>
-        <div class="note">Tangential part α × r is ⊥ to r<sub>A/B</sub>; the normal part −ω²r points from A toward B.</div>
-        <div class="note">Rolling without slipping: a<sub>G</sub> = Rα; the contact point has a<sub>C</sub> = Rω² (toward the center), not zero.</div>
-        <div class="note">Linkages: write a<sub>B</sub> from each bar and match i and j components.</div>
+        <div class="note">Typical unknowns: ω of the slotted bar, v<sub>A rel</sub> along the slot. Match i and j components.</div>
+        <div class="note">A piston in a <em>fixed</em> guide is not §17.6: its pin is fixed to the connecting rod (YES side).</div>
       </details>
     </div>
 
-    <div class="node w300 parent2" data-depth="2" data-parent="n-gpm" id="n-slide">
-      <div class="t">Point Moving Relative to the Body</div>
-      <div class="sub">A pin in a slot, a collar on a rotating bar, or a rotating observer</div>
+    <div class="node w250 c-purple" data-depth="2" data-parent="n-no" id="n-mf">
+      <div class="t">Moving Reference Frames — §17.7</div>
+      <div class="sub">The general version of §17.6: motion seen from any moving frame.</div>
+      <div class="note">An observer in a vehicle, a ship, a plane, or on a turntable. Same equations; B is the frame’s origin.</div>
+      <details>
+        <summary>Details</summary>
+        <div class="note">Frame on a vehicle moving on a curve of radius ρ: ω = v<sub>B</sub>/ρ,&nbsp; α = (a<sub>t</sub>)<sub>B</sub>/ρ.</div>
+        <div class="note">Using ΣF = ma in a frame that accelerates or rotates (Earth, ship, plane): see §17.7. An Earth-fixed frame can usually be treated as inertial.</div>
+      </details>
     </div>
   </div>
+
   <div class="level" data-depth="3">
-    <div class="node w300 c-gold" data-depth="3" data-parent="n-vel" id="n-relv">
+    <div class="node w250 c-gold" data-depth="3" data-parent="n-gpm" id="n-relv">
       <div class="t">Relative Velocity — §17.3</div>
+      <div class="sub">You know the velocity of another point of the same body.</div>
       <div class="f"><span class="vec">v</span><sub>A</sub> = <span class="vec">v</span><sub>B</sub> + <span class="vec">ω</span> × <span class="vec">r</span><sub>A/B</sub></div>
       <details>
         <summary>Details</summary>
         <div class="note">A moves on a circle about B, so v<sub>A/B</sub> = r<sub>A/B</sub>ω, ⊥ to r<sub>A/B</sub>.</div>
-        <div class="note">Write ω = ωk (counterclockwise +). A negative answer means clockwise.</div>
+        <div class="note">Write ω = ω<span class="vec">k</span> (counterclockwise +). A negative answer means clockwise.</div>
         <div class="note">Sliders and walls fix the direction of a velocity: use that component equation first.</div>
       </details>
     </div>
 
-    <div class="node w300 c-gold" data-depth="3" data-parent="n-vel" id="n-ic">
+    <div class="node w250 c-gold" data-depth="3" data-parent="n-gpm" id="n-ic">
       <div class="t">Instantaneous Center — §17.4</div>
-      <div class="f">v<sub>P</sub> = ω r<sub>P/IC</sub>,&nbsp; ⊥ to r<sub>P/IC</sub></div>
+      <div class="sub">You can find a point with zero velocity right now.</div>
+      <div class="f">v<sub>P</sub> = ω r<sub>P/C</sub>,&nbsp; ⊥ to r<sub>P/C</sub></div>
       <div class="warn">Velocities only — never accelerations.</div>
       <details>
         <summary>Details</summary>
-        <div class="note">Locate the IC where the perpendiculars to two known velocity directions meet.</div>
-        <div class="note">Rolling without slipping: the contact point is the IC; v<sub>G</sub> = Rω, top point 2Rω.</div>
-        <div class="note">v<sub>A</sub> = v<sub>B</sub> (same direction and size): pure translation, no IC.</div>
+        <div class="note">C is where the perpendiculars to two known velocity directions meet.</div>
+        <div class="note">Rolling without slipping: the contact point is C; v<sub>G</sub> = Rω, top point 2Rω.</div>
+        <div class="note">If the perpendiculars are parallel, C is at infinity: the body translates (ω = 0).</div>
       </details>
     </div>
+  </div>
 
-    <div class="node w300 c-purple" data-depth="3" data-parent="n-slide" id="n-sc">
-      <div class="t">Sliding Contacts — §17.6</div>
-      <div class="f"><span class="vec">v</span><sub>A</sub> = <span class="vec">v</span><sub>B</sub> + <span class="vec">v</span><sub>rel</sub> + <span class="vec">ω</span> × <span class="vec">r</span><sub>A/B</sub></div>
-      <div class="f"><span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub> + <span class="vec">a</span><sub>rel</sub> + 2<span class="vec">ω</span> × <span class="vec">v</span><sub>rel</sub> + <span class="vec">α</span> × <span class="vec">r</span> − ω²<span class="vec">r</span></div>
+  <div class="level" data-depth="4">
+    <div class="node leafwide c-gold" data-depth="4" data-parent="n-relv n-ic" id="n-acc">
+      <div class="t">Relative Acceleration — §17.5</div>
+      <div class="sub">Asked for accelerations? (Only velocities asked: stop above.)</div>
+      <div class="f"><span class="vec">a</span><sub>A</sub> = <span class="vec">a</span><sub>B</sub> + <span class="vec">α</span> × <span class="vec">r</span><sub>A/B</sub> − ω²<span class="vec">r</span><sub>A/B</sub></div>
+      <div class="warn">Needs every ω from the velocity step.</div>
       <details>
         <summary>Details</summary>
-        <div class="note">Attach a body-fixed frame (origin B) to the body that A slides on.</div>
-        <div class="note">v<sub>rel</sub>, a<sub>rel</sub>: motion of A seen by an observer riding on that body (along the slot or bar).</div>
-        <div class="note">2ω × v<sub>rel</sub> is the Coriolis acceleration: sliding and rotating together.</div>
-      </details>
-    </div>
-
-    <div class="node w300 c-purple" data-depth="3" data-parent="n-slide" id="n-mf">
-      <div class="t">Moving Reference Frames — §17.7</div>
-      <div class="f"><span class="vec">v</span><sub>B</sub> = <span class="vec">v</span><sub>A</sub> + <span class="vec">ω</span> × <span class="vec">r</span><sub>B/A</sub> + (<span class="vec">v</span><sub>B/A</sub>)<sub>xy</sub></div>
-      <details>
-        <summary>Details</summary>
-        <div class="note">The observer at A uses axes that rotate with ω and α (a pilot in a turning plane, a turntable).</div>
-        <div class="note">For an observer moving on a circle: ω = v<sub>A</sub>/ρ, α = (a<sub>t</sub>)<sub>A</sub>/ρ.</div>
-        <div class="note">(v<sub>B/A</sub>)<sub>xy</sub> ≠ v<sub>B</sub> − v<sub>A</sub>: the rotating observer sees something different from a translating one.</div>
+        <div class="note">α × r<sub>A/B</sub> is ⊥ to r<sub>A/B</sub>; −ω²r<sub>A/B</sub> points from A toward B.</div>
+        <div class="note">Rolling without slipping: a<sub>G</sub> = Rα; the contact point has a<sub>C</sub> = Rω² toward the center — not zero.</div>
+        <div class="note">Linkages: write the acceleration of the shared pin from each bar and match i and j components.</div>
       </details>
     </div>
   </div>
@@ -303,11 +337,13 @@
 </div>
 
 <footer class="guidance">
-  <div class="t">Classify the motion first, then choose the tool — and always find velocities before accelerations.</div>
-  <div>• Two points on the same rigid body: relative velocity/acceleration with ω and α of that body.</div>
-  <div>• Quick velocities: the instantaneous center — but never use the IC for accelerations.</div>
-  <div>• A point sliding on a moving body, or an observer that rotates: add the relative terms and the Coriolis term 2ω × v<sub>rel</sub>.</div>
+  <div class="t">First ask about the point, then about the body — and always find velocities before accelerations.</div>
+  <div>• Same-body rule: v<sub>A</sub> = v<sub>B</sub> + ω × r<sub>A/B</sub> works only when A and B are both fixed to the same rigid body.</div>
+  <div>• Rolling without slipping is not sliding: the contact point has zero velocity, so use the YES side.</div>
+  <div>• A slider in a fixed guide is not §17.6: its pin is a point of the connecting rod.</div>
+  <div>• One problem may need several branches: analyze each body separately, then connect them at pins, slots, and contact points.</div>
 </footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
