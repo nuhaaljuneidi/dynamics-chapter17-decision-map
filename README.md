@@ -4,6 +4,10 @@ An interactive decision map for selecting a solution method for rigid-body kinem
 
 Developed by **Dr. Nuha Aljuneidi** for engineering education and independent study.
 
+## Live resource
+
+[Open the Chapter 17 decision map](https://nuhaaljuneidi.github.io/dynamics-chapter17-decision-map/)
+
 ## Learning purpose
 
 The map helps students classify a rigid body's motion (translation, rotation about a fixed axis, or general plane motion) and choose the right tool: relative velocity, the instantaneous center, relative acceleration, sliding contacts, or moving reference frames.
